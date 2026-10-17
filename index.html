@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kargoriva - 3D Delivery Simulator</title>
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <div id="scene-container"></div>
+
+    <div id="ui-root">
+      <!-- ============ MAIN MENU ============ -->
+      <section class="screen" id="screen-menu">
+        <div class="menu-inner">
+          <h1 class="logo">KARGORIVA</h1>
+          <p class="tagline">Simulator Kurir 3D - Setor uang titipan, antar paket, jelajahi kota</p>
+          <div class="menu-buttons">
+            <button class="btn primary" id="btn-continue">▶ Lanjutkan Karier</button>
+            <button class="btn primary" id="btn-career">Career Mode</button>
+            <button class="btn" id="btn-free">Free Mode</button>
+            <div class="menu-row">
+              <button class="btn ghost" id="btn-settings">Pengaturan</button>
+              <button class="btn ghost" id="btn-credits">Credits</button>
+              <button class="btn ghost danger" id="btn-reset">Reset Progres</button>
+            </div>
+          </div>
+          <div class="save-info" id="save-info"></div>
+          <div class="menu-hint">Kontrol: W A S D gerak · Shift kopling · 1-5 gigi · N netral · R mundur · Space rem tangan · E interaksi · F masuk/keluar kendaraan · Esc pause</div>
+        </div>
+      </section>
+
+      <!-- ============ CHARACTER SELECT ============ -->
+      <section class="screen" id="screen-character">
+        <h2 class="screen-title">Pilih Karakter</h2>
+        <p class="screen-sub">Setiap karakter punya peran dan keunggulan berbeda di jalanan.</p>
+        <div class="char-preview">
+          <canvas id="char-preview-canvas" width="380" height="440"></canvas>
+          <div class="char-detail" id="char-detail"></div>
+        </div>
+        <div class="card-row" id="char-cards"></div>
+        <div class="screen-actions">
+          <button class="btn ghost" id="char-back">Kembali</button>
+          <button class="btn primary" id="char-confirm">Lanjut - Pilih Kendaraan →</button>
+        </div>
+      </section>
+
+      <!-- ============ VEHICLE SELECT ============ -->
+      <section class="screen" id="screen-vehicle">
+        <h2 class="screen-title">Pilih Kendaraan</h2>
+        <p class="screen-sub" id="veh-sub">Kendaraan terkunci terbuka seiring naiknya level karier.</p>
+        <div class="card-row" id="vehicle-cards"></div>
+        <div class="screen-actions">
+          <button class="btn ghost" id="veh-back">Kembali</button>
+          <button class="btn primary" id="veh-confirm">Terima Briefing →</button>
+        </div>
+      </section>
+
+      <!-- ============ BRIEFING ============ -->
+      <section class="screen" id="screen-briefing">
+        <div class="panel wide">
+          <h2 id="brief-title">Briefing Pekerjaan</h2>
+          <div class="brief-grid">
+            <div>
+              <h3>Ringkasan</h3>
+              <div class="brief-stats" id="brief-stats"></div>
+            </div>
+            <div>
+              <h3>Manifest Paket</h3>
+              <div class="pkg-list" id="brief-packages"></div>
+            </div>
+          </div>
+          <div class="screen-actions">
+            <button class="btn ghost" id="brief-back">Kembali</button>
+            <button class="btn primary" id="brief-start">Mulai Bekerja</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ HUD ============ -->
+      <div id="hud" class="hidden">
+        <div class="hud-panel hud-mission" id="hud-mission">
+          <div class="hud-row" id="hud-job"></div>
+          <div class="hud-row big" id="hud-packages"></div>
+          <div class="hud-row" id="hud-target"></div>
+          <div class="hud-row" id="hud-time"></div>
+          <div class="hud-row money" id="hud-escrow"></div>
+        </div>
+        <div class="hud-panel hud-map">
+          <canvas id="minimap" width="230" height="180" role="button" tabindex="0" aria-label="Buka peta penuh" title="Klik untuk membuka peta penuh"></canvas>
+        </div>
+        <div id="full-map-overlay" class="full-map-overlay hidden" aria-label="Peta penuh" aria-hidden="true">
+          <div class="full-map-window">
+            <div class="full-map-toolbar">
+              <div><strong>Peta Kota</strong><small>Lokasi pemain, rute, dan semua tujuan</small></div>
+              <button id="full-map-close" class="btn" aria-label="Tutup peta" title="Tutup peta">×</button>
+            </div>
+            <canvas id="full-map" width="1200" height="940" aria-label="Peta seluruh kota"></canvas>
+          </div>
+        </div>
+        <div class="hud-panel hud-dash">
+          <canvas id="dashboard" width="380" height="160"></canvas>
+        </div>
+        <div class="hud-prompt hidden" id="hud-prompt"></div>
+        <div class="hud-toasts" id="hud-toasts"></div>
+        <div class="hud-clock" id="hud-clock"></div>
+      </div>
+
+      <!-- ============ PAUSE ============ -->
+      <section class="screen overlay dim" id="screen-pause">
+        <div class="panel">
+          <h2>⏸ Dijeda</h2>
+          <div class="menu-buttons">
+            <button class="btn primary" id="pause-resume">Lanjutkan</button>
+            <button class="btn" id="pause-restart">Ulangi Pekerjaan</button>
+            <button class="btn" id="pause-settings">Pengaturan</button>
+            <button class="btn ghost" id="pause-menu">Ke Menu Utama</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="screen overlay dim" id="screen-settings">
+        <div class="panel">
+          <h2>Pengaturan</h2>
+          <label class="slider-row">Volume Master<input type="range" id="set-master" min="0" max="100" value="80" /></label>
+          <label class="slider-row">Volume Mesin<input type="range" id="set-engine" min="0" max="100" value="70" /></label>
+          <label class="slider-row">Volume Efek<input type="range" id="set-sfx" min="0" max="100" value="80" /></label>
+          <label class="slider-row">Volume Musik Santai<input type="range" id="set-music" min="0" max="100" value="35" /></label>
+          <label class="slider-row">Sensitivitas Kemudi<input type="range" id="set-steer" min="50" max="150" value="100" /></label>
+          <label class="slider-row">Skala UI<input type="range" id="set-uiscale" min="80" max="130" value="100" /></label>
+          <div class="screen-actions">
+            <button class="btn ghost" id="set-reset">Reset Default</button>
+            <button class="btn primary" id="set-back">Kembali</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ RESULTS ============ -->
+      <section class="screen overlay dim" id="screen-results">
+        <div class="panel wide">
+          <h2>📋 Evaluasi Pekerjaan</h2>
+          <div class="results-grid">
+            <div id="results-left"></div>
+            <div id="results-right"></div>
+          </div>
+          <div class="screen-actions">
+            <button class="btn primary" id="res-next">Pekerjaan Berikutnya</button>
+            <button class="btn ghost" id="res-menu">Ke Menu Utama</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CREDITS ============ -->
+      <section class="screen overlay dim" id="screen-credits">
+        <div class="panel">
+          <h2>Credits</h2>
+          <p>Kargoriva - 3D Delivery Simulator</p>
+          <p>Dibuat dengan Babylon.js, TypeScript, dan Vite.</p>
+          <p>Seluruh peta, kendaraan, dan karakter dibangun secara prosedural melalui kode.</p>
+          <button class="btn primary" id="credits-back">Kembali</button>
+        </div>
+      </section>
+
+      <!-- ============ WORKSHEET (perhitungan penyortiran) ============ -->
+      <section class="screen overlay dim" id="screen-worksheet">
+        <div class="panel wide">
+          <h2>📐 Lembar Kerja Penyortiran</h2>
+          <p class="screen-sub" id="worksheet-sub"></p>
+          <div class="worksheet-grid">
+            <div class="result-block" id="worksheet-capacity"></div>
+            <div class="result-block" id="worksheet-zones"></div>
+            <div class="result-block" id="worksheet-packing"></div>
+            <div class="result-block" id="worksheet-axle"></div>
+          </div>
+          <div class="worksheet-verdict" id="worksheet-verdict"></div>
+          <div class="screen-actions">
+            <button class="btn primary" id="worksheet-confirm">Setujui & Proses Packing</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ DIALOG ============ -->
+      <section class="screen overlay dim dialog-screen" id="screen-dialog">
+        <div class="dialog-box">
+          <canvas id="dialog-portrait" width="130" height="130"></canvas>
+          <div class="dialog-content">
+            <div class="dialog-name" id="dialog-name"></div>
+            <div class="dialog-text" id="dialog-text"></div>
+            <div class="dialog-choices" id="dialog-choices"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CONFIRM ============ -->
+      <section class="screen overlay dim" id="screen-confirm">
+        <div class="panel">
+          <h2 id="confirm-title">Konfirmasi</h2>
+          <p id="confirm-text"></p>
+          <div class="screen-actions">
+            <button class="btn ghost" id="confirm-no">Batal</button>
+            <button class="btn primary danger" id="confirm-yes">Ya</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
